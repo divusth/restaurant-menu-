@@ -1,0 +1,776 @@
+```html
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Aura Gastronomique | Restaurant & Lounge</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Playfair Display & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,400;1,600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            100: '#FFF7D6',
+                            300: '#F5E08B',
+                            400: '#E6C687',
+                            500: '#D4AF37', // Royal Gold
+                            600: '#B59121',
+                            700: '#8A6D14'
+                        },
+                        darkBg: '#0F0F12',
+                        darkCard: '#17171C',
+                        darkBorder: '#282830'
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0F0F12;
+            color: #E2E8F0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(23, 23, 28, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.18);
+        }
+
+        .glass-nav {
+            background: rgba(15, 15, 18, 0.88);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F0F12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4AF37;
+            border-radius: 3px;
+        }
+
+        /* Glowing Effects */
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.35);
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Gold Gradient Text */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF5C0 0%, #D4AF37 50%, #997A15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Hide scrollbar for category pills */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body x-data="restaurantApp()" class="overflow-x-hidden min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <header class="fixed top-0 left-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div @click="switchTab('home')" class="cursor-pointer flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full border border-gold-500/50 flex items-center justify-center bg-gold-500/10 text-gold-500 font-serif font-bold text-xl shadow-lg">
+                    L
+                </div>
+                <div>
+                    <h1 class="text-xl font-serif font-bold tracking-wide gold-gradient-text">L'AURA</h1>
+                    <p class="text-[9px] text-gray-400 font-sans tracking-[0.25em] uppercase">Bistrot & Gastronomie</p>
+                </div>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center space-x-8">
+                <button @click="switchTab('home')" :class="activeTab === 'home' ? 'text-gold-400 border-b-2 border-gold-500 font-semibold' : 'text-gray-300 hover:text-gold-300'" class="pb-1 text-sm transition-all">Accueil</button>
+                <button @click="switchTab('menu')" :class="activeTab === 'menu' ? 'text-gold-400 border-b-2 border-gold-500 font-semibold' : 'text-gray-300 hover:text-gold-300'" class="pb-1 text-sm transition-all">Le Menu</button>
+                <button @click="switchTab('offers')" :class="activeTab === 'offers' ? 'text-gold-400 border-b-2 border-gold-500 font-semibold' : 'text-gray-300 hover:text-gold-300'" class="pb-1 text-sm transition-all">Menus Dégustation</button>
+            </nav>
+
+            <!-- Actions (Cart & Reservation) -->
+            <div class="flex items-center space-x-4">
+                <!-- Cart Button -->
+                <button @click="isCartOpen = true" class="relative p-2.5 rounded-full bg-darkCard border border-gold-500/30 text-gold-400 hover:bg-gold-500 hover:text-black transition-all">
+                    <i class="fa-solid fa-bag-shopping text-lg"></i>
+                    <span x-show="cartItemsCount > 0" x-text="cartItemsCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-darkBg animate-pulse"></span>
+                </button>
+
+                <!-- Book Table Button -->
+                <button @click="openReservationModal()" class="hidden sm:flex items-center space-x-2 px-5 py-2.5 rounded-full border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-black text-xs font-bold transition-all duration-300 shadow-lg shadow-gold-500/10">
+                    <i class="fa-regular fa-calendar-check text-sm"></i>
+                    <span>Réserver une table</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main View Switcher with Touch Swipe Support -->
+    <main class="flex-grow pt-20" 
+          @touchstart="handleTouchStart($event)" 
+          @touchend="handleTouchEnd($event)">
+
+        <!-- ================= SECTION 1: ACCUEIL (HERO LANDING) ================= -->
+        <section x-show="activeTab === 'home'" 
+                 x-transition:enter="transition ease-out duration-500 transform"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 class="relative min-h-[calc(100vh-5rem)] flex items-center justify-center overflow-hidden">
+            
+            <!-- Hero Background Image -->
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1920&auto=format&fit=crop" 
+                     alt="Restaurant Ambience" 
+                     class="w-full h-full object-cover object-center scale-105 animate-pulse duration-[12000ms]">
+                <div class="absolute inset-0 bg-gradient-to-t from-darkBg via-darkBg/80 to-black/70"></div>
+            </div>
+
+            <!-- Hero Content -->
+            <div class="relative z-10 max-w-4xl mx-auto text-center px-4 py-16 flex flex-col items-center">
+                
+                <span class="inline-block px-4 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/40 text-gold-400 text-xs sm:text-sm font-medium tracking-widest uppercase mb-6 animate-bounce">
+                    ✨ Haute Cuisine Française & Grillades
+                </span>
+
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-serif font-extrabold text-white leading-tight mb-6 tracking-wide">
+                    L'Art de la Table <br><span class="gold-gradient-text text-glow">& du Raffinement</span>
+                </h1>
+
+                <p class="text-base sm:text-xl text-gray-300 max-w-2xl mb-10 font-light leading-relaxed">
+                    Une expérience culinaire d'exception où se mêlent produits frais d'excellence, viandes mâturées et créations gourmandes.
+                </p>
+
+                <!-- CTA Button -->
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <button @click="switchTab('menu')" 
+                            class="group relative inline-flex items-center justify-center px-8 py-4 text-base font-bold text-black transition-all duration-300 bg-gradient-to-r from-gold-300 via-gold-500 to-gold-600 rounded-full glow-gold hover:scale-105 active:scale-95">
+                        <span class="flex items-center gap-3 tracking-wider font-sans uppercase text-sm">
+                            <i class="fa-solid fa-utensils transition-transform group-hover:rotate-12"></i>
+                            <span>VOIR LE MENU</span>
+                            <i class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+                        </span>
+                    </button>
+
+                    <button @click="openReservationModal()" 
+                            class="px-8 py-4 rounded-full border border-gold-500/40 bg-darkCard/60 text-gold-300 hover:border-gold-500 hover:text-white transition-all text-sm font-semibold tracking-wide uppercase">
+                        Réserver une Table
+                    </button>
+                </div>
+
+                <!-- Feature Highlights -->
+                <div class="mt-16 grid grid-cols-3 gap-6 sm:gap-16 text-center border-t border-gold-500/20 pt-8 w-full max-w-2xl">
+                    <div>
+                        <p class="text-gold-400 font-serif font-bold text-2xl sm:text-3xl">100%</p>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Produits Frais</p>
+                    </div>
+                    <div>
+                        <p class="text-gold-400 font-serif font-bold text-2xl sm:text-3xl">★ 4.9</p>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Avis Clients</p>
+                    </div>
+                    <div>
+                        <p class="text-gold-400 font-serif font-bold text-2xl sm:text-3xl">Chef</p>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Gastronomique</p>
+                    </div>
+                </div>
+
+                <!-- Swipe Indicator for Mobile -->
+                <div class="mt-12 text-gray-500 text-xs flex items-center gap-2 md:hidden animate-pulse">
+                    <i class="fa-solid fa-hand-pointer"></i>
+                    <span>Glissez vers la gauche pour découvrir le menu</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: LE MENU ================= -->
+        <section x-show="activeTab === 'menu'" 
+                 x-transition:enter="transition ease-out duration-400"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Page Header -->
+            <div class="text-center mb-10">
+                <span class="text-gold-400 text-xs font-semibold uppercase tracking-widest">Carte Gastronomique</span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold gold-gradient-text mt-1 mb-3">Nos Créations Culinaires</h2>
+                <p class="text-gray-400 text-xs sm:text-sm max-w-xl mx-auto">Sélectionnez une catégorie ou recherchez vos plats préférés préparés par notre Chef.</p>
+            </div>
+
+            <!-- Controls: Search & Category Filter Bar -->
+            <div class="mb-10 space-y-4 md:space-y-0 md:flex md:items-center md:justify-between gap-4">
+                
+                <!-- Search Input -->
+                <div class="relative w-full md:w-80">
+                    <input type="text" 
+                           x-model="searchQuery" 
+                           placeholder="Rechercher un plat, ingrédient..." 
+                           class="w-full bg-darkCard border border-gold-500/30 rounded-full py-2.5 px-5 pl-11 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition-all">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-gold-500/70 text-sm"></i>
+                </div>
+
+                <!-- Categories Scrollable Tabs -->
+                <div class="overflow-x-auto pb-2 md:pb-0 flex items-center gap-2 no-scrollbar">
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button @click="selectedCategory = cat.id" 
+                                :class="selectedCategory === cat.id ? 'bg-gold-500 text-black font-bold shadow-md shadow-gold-500/20' : 'bg-darkCard text-gray-300 border border-gold-500/20 hover:border-gold-500/50'"
+                                class="px-5 py-2.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2">
+                            <i :class="cat.icon"></i>
+                            <span x-text="cat.name"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Food Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <template x-for="item in filteredMenuItems" :key="item.id">
+                    <div class="glass-panel rounded-2xl overflow-hidden group hover:border-gold-500/60 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+                        
+                        <div>
+                            <!-- Card Image -->
+                            <div class="relative h-56 overflow-hidden">
+                                <img :src="item.image" :alt="item.name" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-gradient-to-t from-darkCard via-transparent to-transparent"></div>
+                                
+                                <!-- Badges -->
+                                <div class="absolute top-3 left-3 flex flex-col gap-1.5">
+                                    <template x-if="item.isChefSpecial">
+                                        <span class="bg-gold-500 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                                            ⭐ Spécialité du Chef
+                                        </span>
+                                    </template>
+                                    <template x-if="item.isPopular">
+                                        <span class="bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                                            🔥 Populaire
+                                        </span>
+                                    </template>
+                                    <template x-if="item.isNew">
+                                        <span class="bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                                            Nouveau
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Card Content -->
+                            <div class="p-5">
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <h3 class="text-lg font-serif font-bold text-white group-hover:text-gold-300 transition-colors" x-text="item.name"></h3>
+                                    <span class="text-base font-extrabold text-gold-400 whitespace-nowrap" x-text="item.price + ' DA'"></span>
+                                </div>
+                                <p class="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-4" x-text="item.description"></p>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="px-5 pb-5 pt-0 flex items-center justify-between border-t border-gold-500/10 mt-auto pt-3">
+                            <button @click="openDetailsModal(item)" class="text-xs text-gray-400 hover:text-gold-300 underline underline-offset-4 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info text-[10px]"></i>
+                                <span>Détails & Ingrédients</span>
+                            </button>
+                            
+                            <button @click="addToCart(item)" 
+                                    class="bg-gold-500/10 hover:bg-gold-500 border border-gold-500/40 hover:text-black text-gold-400 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span>Ajouter</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </template>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="filteredMenuItems.length === 0" class="text-center py-20">
+                <i class="fa-solid fa-utensils text-4xl text-gray-600 mb-3"></i>
+                <p class="text-gray-400 text-base">Aucun plat ne correspond à votre recherche.</p>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: MENUS DÉGUSTATION & OFFRES ================= -->
+        <section x-show="activeTab === 'offers'" 
+                 x-transition:enter="transition ease-out duration-400"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <div class="text-center mb-10">
+                <span class="text-gold-400 text-xs font-semibold uppercase tracking-widest">Expériences Exclusives</span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold gold-gradient-text mt-1 mb-3">Menus Découverte & Formules</h2>
+                <p class="text-gray-400 text-xs sm:text-sm max-w-xl mx-auto">Des assemblages harmonieux conçus pour vous offrir un voyage gastronomique inoubliable.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Offer Card 1 -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col sm:flex-row gap-6 items-center border border-gold-500/30">
+                    <div class="w-full sm:w-1/2 h-52 sm:h-full rounded-2xl overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover">
+                        <span class="absolute top-2 left-2 bg-gold-500 text-black font-extrabold text-[10px] px-3 py-1 rounded-full uppercase">Menu Prestige</span>
+                    </div>
+                    <div class="w-full sm:w-1/2 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] text-gold-400 font-bold uppercase tracking-wider">Pour 2 Personnes</span>
+                            <h3 class="text-2xl font-serif font-bold text-white my-2">Menu Dégustation Signature</h3>
+                            <p class="text-gray-400 text-xs leading-relaxed mb-4">Entrée au Foie Gras Poêlé + 2 Pavés de Saumon ou Entrecôtes + Tiramisu & Fondant + Cocktails Signature.</p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-gray-500 line-through text-xs block">14 000 DA</span>
+                                <span class="text-xl font-extrabold text-gold-400">11 500 DA</span>
+                            </div>
+                            <button @click="openReservationModal('Menu Dégustation Signature')" class="bg-gold-500 text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gold-400 transition-all">Réserver</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offer Card 2 -->
+                <div class="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col sm:flex-row gap-6 items-center border border-gold-500/30">
+                    <div class="w-full sm:w-1/2 h-52 sm:h-full rounded-2xl overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover">
+                        <span class="absolute top-2 left-2 bg-red-600 text-white font-extrabold text-[10px] px-3 py-1 rounded-full uppercase">Business & Lunch</span>
+                    </div>
+                    <div class="w-full sm:w-1/2 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[11px] text-gold-400 font-bold uppercase tracking-wider">Formule Midi</span>
+                            <h3 class="text-2xl font-serif font-bold text-white my-2">L'Aura Express Gourmet</h3>
+                            <p class="text-gray-400 text-xs leading-relaxed mb-4">Plat du jour au choix (Burger Gourmet ou Escalope à la Crème) + Dessert du Chef + Boisson au choix.</p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-gray-500 line-through text-xs block">4 500 DA</span>
+                                <span class="text-xl font-extrabold text-gold-400">3 600 DA</span>
+                            </div>
+                            <button @click="openReservationModal('Formule L\'Aura Express')" class="bg-gold-500 text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gold-400 transition-all">Réserver</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar for Mobile -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full glass-nav z-40 border-t border-gold-500/20 py-2.5 px-6 flex justify-around items-center">
+        <button @click="switchTab('home')" :class="activeTab === 'home' ? 'text-gold-400 font-bold' : 'text-gray-400'" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px]">Accueil</span>
+        </button>
+        <button @click="switchTab('menu')" :class="activeTab === 'menu' ? 'text-gold-400 font-bold' : 'text-gray-400'" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-utensils text-base"></i>
+            <span class="text-[10px]">Menu</span>
+        </button>
+        <button @click="switchTab('offers')" :class="activeTab === 'offers' ? 'text-gold-400 font-bold' : 'text-gray-400'" class="flex flex-col items-center gap-1">
+            <i class="fa-solid fa-star text-base"></i>
+            <span class="text-[10px]">Formules</span>
+        </button>
+        <button @click="openReservationModal()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gold-400">
+            <i class="fa-solid fa-calendar-days text-base"></i>
+            <span class="text-[10px]">Réserver</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-darkCard border-t border-gold-500/10 py-10 mb-16 md:mb-0">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h4 class="font-serif font-bold text-lg gold-gradient-text mb-2">L'AURA BISTROT & GASTRONOMIE</h4>
+            <p class="text-xs text-gray-400 max-w-md mx-auto mb-4">Service continu de 12h00 à 23h30 | Réservation conseillée le week-end</p>
+            <p class="text-[11px] text-gray-600">Tous droits réservés © 2026</p>
+        </div>
+    </footer>
+
+    <!-- ================= MODALS & DRAWERS ================= -->
+
+    <!-- 1. CART DRAWER (Mon Panier) -->
+    <div x-show="isCartOpen" class="fixed inset-0 z-50 overflow-hidden" x-cloak>
+        <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity" @click="isCartOpen = false"></div>
+
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-darkCard border-l border-gold-500/20 text-white p-6 flex flex-col justify-between shadow-2xl">
+                <div>
+                    <!-- Header -->
+                    <div class="flex items-center justify-between pb-4 border-b border-gold-500/20 mb-4">
+                        <h3 class="text-base font-serif font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-bag-shopping text-gold-400"></i>
+                            <span>Votre Commande</span>
+                        </h3>
+                        <button @click="isCartOpen = false" class="text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                        <template x-for="(item, index) in cart" :key="index">
+                            <div class="flex items-center justify-between bg-darkBg/80 p-3 rounded-xl border border-gold-500/10">
+                                <div class="flex items-center gap-3">
+                                    <img :src="item.image" class="w-12 h-12 rounded-lg object-cover">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-white" x-text="item.name"></h4>
+                                        <p class="text-xs text-gold-400 font-semibold mt-0.5" x-text="item.price + ' DA'"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button @click="updateQuantity(index, -1)" class="w-6 h-6 rounded bg-darkCard text-gold-400 font-bold border border-gold-500/30 flex items-center justify-center text-xs">-</button>
+                                    <span class="text-xs font-bold" x-text="item.quantity"></span>
+                                    <button @click="updateQuantity(index, 1)" class="w-6 h-6 rounded bg-darkCard text-gold-400 font-bold border border-gold-500/30 flex items-center justify-center text-xs">+</button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div x-show="cart.length === 0" class="text-center py-12 text-gray-500 text-xs">
+                            Votre panier est vide pour le moment.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Total -->
+                <div class="border-t border-gold-500/20 pt-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs text-gray-400">Total de la commande:</span>
+                        <span class="text-2xl font-extrabold text-gold-400" x-text="cartTotal + ' DA'"></span>
+                    </div>
+                    <button @click="sendWhatsAppOrder()" 
+                            :disabled="cart.length === 0"
+                            class="w-full bg-emerald-600 disabled:bg-gray-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-500 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                        <span>Commander via WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DISH DETAILS MODAL -->
+    <div x-show="isDetailsOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" x-cloak>
+        <div class="bg-darkCard border border-gold-500/30 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative" @click.away="isDetailsOpen = false">
+            <button @click="isDetailsOpen = false" class="absolute top-4 right-4 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <template x-if="selectedItem">
+                <div>
+                    <img :src="selectedItem.image" class="w-full h-60 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-serif font-bold text-white" x-text="selectedItem.name"></h3>
+                            <span class="text-xl font-extrabold text-gold-400" x-text="selectedItem.price + ' DA'"></span>
+                        </div>
+                        <p class="text-gray-300 text-xs leading-relaxed my-4" x-text="selectedItem.description"></p>
+                        
+                        <div class="mb-6">
+                            <span class="text-[11px] font-bold text-gold-400 uppercase tracking-wider block mb-1">Ingrédients Principaux:</span>
+                            <p class="text-xs text-gray-400" x-text="selectedItem.ingredients || 'Produits frais sélectionnés par notre chef.'"></p>
+                        </div>
+
+                        <div class="border-t border-gold-500/10 pt-4 flex justify-end gap-3">
+                            <button @click="addToCart(selectedItem); isDetailsOpen = false;" class="bg-gold-500 text-black px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gold-400">Ajouter au panier</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- 3. RESERVATION MODAL -->
+    <div x-show="isReservationOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" x-cloak>
+        <div class="bg-darkCard border border-gold-500/30 rounded-3xl max-w-md w-full p-6 shadow-2xl relative" @click.away="isReservationOpen = false">
+            <button @click="isReservationOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <h3 class="text-2xl font-serif font-bold gold-gradient-text mb-1">Réserver une Table</h3>
+            <p class="text-xs text-gray-400 mb-6">Veuillez indiquer vos détails pour confirmer votre présence.</p>
+
+            <form @submit.prevent="confirmReservation()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Nom Complet</label>
+                    <input type="text" required class="w-full bg-darkBg border border-gold-500/20 rounded-xl p-2.5 text-xs text-white focus:border-gold-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1">Numéro de Téléphone</label>
+                    <input type="tel" required placeholder="06XX XX XX XX" class="w-full bg-darkBg border border-gold-500/20 rounded-xl p-2.5 text-xs text-white focus:border-gold-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Date</label>
+                        <input type="date" required class="w-full bg-darkBg border border-gold-500/20 rounded-xl p-2.5 text-xs text-white focus:border-gold-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Personnes</label>
+                        <select class="w-full bg-darkBg border border-gold-500/20 rounded-xl p-2.5 text-xs text-white focus:border-gold-500 outline-none">
+                            <option>2 Personnes</option>
+                            <option>4 Personnes</option>
+                            <option>6+ Personnes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gold-500 text-black font-bold py-3 rounded-xl hover:bg-gold-400 transition-all text-xs uppercase tracking-wider mt-4">
+                    Confirmer la Réservation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div x-show="toast.show" 
+         x-transition
+         class="fixed bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2 bg-gold-500 text-black px-6 py-3 rounded-full font-bold shadow-2xl z-50 flex items-center gap-2 text-xs"
+         x-cloak>
+        <i class="fa-solid fa-circle-check"></i>
+        <span x-text="toast.message"></span>
+    </div>
+
+    <!-- Application Alpine JS Script -->
+    <script>
+        function restaurantApp() {
+            return {
+                activeTab: 'home',
+                selectedCategory: 'all',
+                searchQuery: '',
+                isCartOpen: false,
+                isDetailsOpen: false,
+                isReservationOpen: false,
+                selectedItem: null,
+                cart: [],
+                toast: { show: false, message: '' },
+
+                touchStartX: 0,
+                touchEndX: 0,
+
+                categories: [
+                    { id: 'all', name: 'Tous les plats', icon: 'fa-solid fa-border-all' },
+                    { id: 'entrees', name: 'Entrées', icon: 'fa-solid fa-bowl-food' },
+                    { id: 'plats', name: 'Plats Principaux', icon: 'fa-solid fa-plate-wheat' },
+                    { id: 'grillades', name: 'Grillades & Burgers', icon: 'fa-solid fa-fire' },
+                    { id: 'desserts', name: 'Desserts', icon: 'fa-solid fa-cake-candles' },
+                    { id: 'boissons', name: 'Cocktails & Boissons', icon: 'fa-solid fa-glass-water' }
+                ],
+
+                menuItems: [
+                    {
+                        id: 1,
+                        categoryId: 'entrees',
+                        name: 'Salade César au Poulet Croustillant',
+                        price: 1600,
+                        description: 'Cœur de romaine, blanc de poulet pâné au panko, copeaux de parmesan AOP, croûtons à l\'ail et sauce César maison.',
+                        ingredients: 'Romaine, poulet pâné, parmesan, sauce césar maison, croûtons dorés.',
+                        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: false,
+                        isPopular: true,
+                        isNew: false
+                    },
+                    {
+                        id: 2,
+                        categoryId: 'entrees',
+                        name: 'Foie Gras Poêlé aux Figues',
+                        price: 2800,
+                        description: 'Escalope de foie gras poêlée, chutney de figues fraîches et réduction de vinaigre balsamique sur brioche toastée.',
+                        ingredients: 'Foie gras frais, figues, brioche artisanale, balsamique.',
+                        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: true,
+                        isPopular: false,
+                        isNew: false
+                    },
+                    {
+                        id: 3,
+                        categoryId: 'plats',
+                        name: 'Pavé de Saumon Rôti',
+                        price: 3400,
+                        description: 'Saumon frais rôti sur peau, mousseline de patate douce, asperges vertes poêlées et émulsion au citron vert.',
+                        ingredients: 'Saumon Atlantique, patate douce, asperges, citron vert, beurre d\'Isigny.',
+                        image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: true,
+                        isPopular: false,
+                        isNew: true
+                    },
+                    {
+                        id: 4,
+                        categoryId: 'grillades',
+                        name: 'Entrecôte Grillée (300g)',
+                        price: 3900,
+                        description: 'Pièce de bœuf maturée grillée au feu de bois, servie avec frites fraîches maison et sauce au poivre vert.',
+                        ingredients: 'Bœuf maturé, pommes de terre fraîches, poivre vert, beurre maître d\'hôtel.',
+                        image: 'https://images.unsplash.com/photo-1558030006-450675393462?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: false,
+                        isPopular: true,
+                        isNew: false
+                    },
+                    {
+                        id: 5,
+                        categoryId: 'grillades',
+                        name: 'Burger Gourmet Black Angus',
+                        price: 2400,
+                        description: 'Steak haché Black Angus (180g), cheddar affiné, bacon grillé, oignons caramélisés et sauce secrète du Chef.',
+                        ingredients: 'Pain brioché artisanal, steak Angus, cheddar, bacon, oignons.',
+                        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: false,
+                        isPopular: true,
+                        isNew: false
+                    },
+                    {
+                        id: 6,
+                        categoryId: 'desserts',
+                        name: 'Fondant au Chocolat Cœur Coulant',
+                        price: 1100,
+                        description: 'Gâteau au chocolat noir 70% pur origine, cœur coulant et sa boule de glace vanille de Madagascar.',
+                        ingredients: 'Chocolat noir 70%, beurre, œufs, glace vanille artisanale.',
+                        image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: true,
+                        isPopular: true,
+                        isNew: false
+                    },
+                    {
+                        id: 7,
+                        categoryId: 'boissons',
+                        name: 'Mojito Passion Artisanale',
+                        price: 850,
+                        description: 'Menthe fraîche pilée, fruit de la passion frais, jus de citron vert et eau gazeuse.',
+                        ingredients: 'Menthe, fruit de la passion, citron vert, sucre de canne.',
+                        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600&auto=format&fit=crop',
+                        isChefSpecial: false,
+                        isPopular: false,
+                        isNew: true
+                    }
+                ],
+
+                get filteredMenuItems() {
+                    return this.menuItems.filter(item => {
+                        const matchesCategory = this.selectedCategory === 'all' || item.categoryId === this.selectedCategory;
+                        const matchesSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                              item.description.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                get cartTotal() {
+                    return this.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+                },
+
+                get cartItemsCount() {
+                    return this.cart.reduce((total, item) => total + item.quantity, 0);
+                },
+
+                switchTab(tabName) {
+                    this.activeTab = tabName;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                addToCart(item) {
+                    const existing = this.cart.find(i => i.id === item.id);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        this.cart.push({ ...item, quantity: 1 });
+                    }
+                    this.showNotification(`"${item.name}" ajouté au panier`);
+                },
+
+                updateQuantity(index, change) {
+                    this.cart[index].quantity += change;
+                    if (this.cart[index].quantity <= 0) {
+                        this.cart.splice(index, 1);
+                    }
+                },
+
+                openDetailsModal(item) {
+                    this.selectedItem = item;
+                    this.isDetailsOpen = true;
+                },
+
+                openReservationModal(offerName = null) {
+                    this.isReservationOpen = true;
+                },
+
+                confirmReservation() {
+                    this.isReservationOpen = false;
+                    this.showNotification("Votre demande de réservation a été envoyée !");
+                },
+
+                sendWhatsAppOrder() {
+                    let message = "Bonjour L'Aura Restaurant, je souhaite commander :\n\n";
+                    this.cart.forEach(item => {
+                        message += `• ${item.quantity}x ${item.name} (${item.price * item.quantity} DA)\n`;
+                    });
+                    message += `\n*Total : ${this.cartTotal} DA*`;
+                    
+                    const encodedMessage = encodeURIComponent(message);
+                    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+                },
+
+                showNotification(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    setTimeout(() => { this.toast.show = false; }, 3000);
+                },
+
+                // Mobile Swipe Handling
+                handleTouchStart(e) {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                },
+
+                handleTouchEnd(e) {
+                    this.touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                },
+
+                handleSwipe() {
+                    const distance = this.touchEndX - this.touchStartX;
+                    if (Math.abs(distance) > 70) {
+                        if (distance < 0) { // Swipe Left
+                            if (this.activeTab === 'home') this.switchTab('menu');
+                            else if (this.activeTab === 'menu') this.switchTab('offers');
+                        } else { // Swipe Right
+                            if (this.activeTab === 'offers') this.switchTab('menu');
+                            else if (this.activeTab === 'menu') this.switchTab('home');
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
